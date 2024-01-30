@@ -54,6 +54,7 @@ function App() {
   const [keywords, setKeywords] = useState("");
   const [otherInudustry, setOtherIndustry] = useState("");
   const [textDescription, setTextDescription] = useState<string | null>("");
+  const [advertisement,setAdvertisement] = useState<any>("");
   const Industries = [
     'Pet Care',
     'Travel Agency',
@@ -324,6 +325,24 @@ function App() {
     // setValidity(false);
   };
 
+
+  async function handleRatingAdvertisement(e: any) {
+    const formData = new FormData();
+    formData.append('image', description);
+    formData.append('image', e.target.files[0].getAsDataURL());
+    formData.append('productName',productName);
+    try {
+      const response = await fetch('http://localhost:3005/rate-advertisement', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      setAdvertisement(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+  }
 
 
 
@@ -612,6 +631,18 @@ function App() {
       }
       <input type="file" onChange={handleImageChange}></input>
       {updatedImage && <img src={(updatedImage)} alt="Uploaded" />}
+      <Button variant='contained' onClick={handleRatingAdvertisement} sx={{
+        backgroundColor: 'red',
+        color: 'white',
+        margin: "10px",
+        '&:hover': {
+          backgroundColor: 'red',
+        },
+        '&:active': {
+          backgroundColor: 'darkred',
+        }
+      }}>Compare Advertisements</Button>
+      <p style={{ color: "white", width: '33%', margin: 'auto', }}>{advertisement ? advertisement : ""}</p>
     </div>
 
 
