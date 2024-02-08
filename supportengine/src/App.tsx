@@ -17,6 +17,8 @@ import InputLabel from '@mui/material/InputLabel';
 import { upload } from '@testing-library/user-event/dist/upload';
 import { url } from 'inspector';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Cookies from 'js-cookie';
+
 
 
 
@@ -54,7 +56,10 @@ function App() {
   const [keywords, setKeywords] = useState("");
   const [otherInudustry, setOtherIndustry] = useState("");
   const [textDescription, setTextDescription] = useState<string | null>("");
-  const [advertisement,setAdvertisement] = useState<any>("");
+  const [advertisement, setAdvertisement] = useState<any>("");
+  const [similarRecommendation, setSimilarRecommendation] = useState<any>("");
+  const [analyzedResponse, setAnalyzedResponse] = useState<any>("");
+
   const Industries = [
     'Pet Care',
     'Travel Agency',
@@ -69,6 +74,9 @@ function App() {
 
   //grabs the array initially
   useEffect(() => {
+    const SavedResponse = Cookies.get('response');
+    const SavedtextDescription = Cookies.get('textDescription');
+    const Saveddescription = Cookies.get('description')
     fetch('http://localhost:3003/get-array')
       .then(response => response.json())
       .then(data => setURLRecs(data));
@@ -126,6 +134,16 @@ function App() {
       console.log(descriptionResponse);
       setDescription(descriptionResponse);
       // setDescription2(descriptionResponse2);
+      Cookies.set('description',descriptionResponse, {expires : 1});
+      if(promise3.choices[0].message.content)
+      {
+        Cookies.set('textDescription',promise3.choices[0].message.content, {expires : 1});
+      }
+      if(promise1.choices[0].message.content)
+      {
+        Cookies.set('response',promise1.choices[0].message.content, {expires : 1});
+      }
+
     }
     catch (error) {
       setDescription(errorImage);
@@ -330,7 +348,7 @@ function App() {
     const formData = new FormData();
     formData.append('image', description);
     formData.append('image', e.target.files[0].getAsDataURL());
-    formData.append('productName',productName);
+    formData.append('productName', productName);
     try {
       const response = await fetch('http://localhost:3005/rate-advertisement', {
         method: 'POST',
@@ -343,6 +361,62 @@ function App() {
     }
 
   }
+
+  async function FindSimilarRecommendation() {
+    try {
+      fetch('http://127.0.0.1:5003/find_recommendation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_title: productName
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          setSimilarRecommendation(data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function analyzeResponse() {
+    try {
+      fetch('http://127.0.0.1:5003/analyze_recommendation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_descrec: response
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          setAnalyzedResponse(data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
+
+  const clearAllCookies = () =>
+  {
+    const allCookies = Cookies.get();
+    for (let cookie in allCookies) {
+        Cookies.remove(cookie);
+    }
+  };
 
 
 
@@ -642,7 +716,38 @@ function App() {
           backgroundColor: 'darkred',
         }
       }}>Compare Advertisements</Button>
+
       <p style={{ color: "white", width: '33%', margin: 'auto', }}>{advertisement ? advertisement : ""}</p>
+      <Button id="FindSimilarRecommendation"
+        disabled={false}
+        onClick={FindSimilarRecommendation}
+        sx={{
+          width: '68%'
+        }}
+      ></Button>
+
+      <p style={{ color: "white", width: '33%', margin: 'auto', }}>{similarRecommendation ? similarRecommendation : ""}</p>
+      <Button id="AnalyzeRecommendation"
+        disabled={response?.length != 0}
+        onClick={analyzeResponse}
+        sx={{
+          width: '68%'
+        }}
+      ></Button>
+      <p style={{ color: "white", width: '33%', margin: 'auto', }}>{analyzedResponse ? analyzedResponse : ""}</p>
+      <Button variant = 'contained' onClick = {clearAllCookies}  sx={{
+                backgroundColor: 'red',
+                margin: '10px',
+                color: 'white',
+                '&:hover': {
+                    backgroundColor: 'red',  
+                },
+                '&:active': {
+                    backgroundColor: 'darkred',
+                },
+                maxHeight: '30px'
+            }}>Clear Cookies</Button>
+
     </div>
 
 
