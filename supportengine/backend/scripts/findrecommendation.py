@@ -7,7 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-df = pd.read_csv('output.csv')  # Make sure 'output.csv' is in your working directory
+df = pd.read_csv('output.csv')  
 
 
 tfidf = TfidfVectorizer(stop_words='english')
